@@ -9,12 +9,12 @@
 
 import SourceState from './State.js';
 import TileImage from './TileImage.js';
-import {applyTransform, intersects} from '../extent.js';
-import {assert} from '../asserts.js';
-import {createFromTemplates} from '../tileurlfunction.js';
-import {createXYZ, extentFromProjection} from '../tilegrid.js';
-import {get as getProjection, getTransformFromProjections} from '../proj.js';
-import {jsonp as requestJSONP} from '../net.js';
+import { applyTransform, intersects } from '../extent.js';
+import { assert } from '../asserts.js';
+import { createFromTemplates } from '../tileurlfunction.js';
+import { createXYZ, extentFromProjection } from '../tilegrid.js';
+import { get as getProjection, getTransformFromProjections } from '../proj.js';
+import { jsonp as requestJSONP } from '../net.js';
 
 /**
  * @typedef {Object} Config
@@ -41,6 +41,7 @@ import {jsonp as requestJSONP} from '../net.js';
  * you must provide a `crossOrigin` value if you want to access pixel data with the Canvas renderer.
  * See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image for more detail.
  * @property {boolean} [imageSmoothing=true] Enable image smoothing.
+ * @property {string | import("../proj.js").ProjectionLike} [projection] 使TileJson支持其他空间参考 modified by lipeng 2020.9.21.
  * @property {boolean} [jsonp=false] Use JSONP with callback to load the TileJSON.
  * Useful when the server does not support CORS..
  * @property {number} [reprojectionErrorThreshold=0.5] Maximum allowed reprojection error (in pixels).
@@ -67,143 +68,145 @@ import {jsonp as requestJSONP} from '../net.js';
  * @api
  */
 class TileJSON extends TileImage {
-  /**
-   * @param {Options} options TileJSON options.
-   */
-  constructor(options) {
-    super({
-      attributions: options.attributions,
-      cacheSize: options.cacheSize,
-      crossOrigin: options.crossOrigin,
-      imageSmoothing: options.imageSmoothing,
-      projection: getProjection('EPSG:3857'),
-      reprojectionErrorThreshold: options.reprojectionErrorThreshold,
-      state: SourceState.LOADING,
-      tileLoadFunction: options.tileLoadFunction,
-      wrapX: options.wrapX !== undefined ? options.wrapX : true,
-      transition: options.transition,
-    });
-
     /**
-     * @type {Config}
-     * @private
+     * @param {Options} options TileJSON options.
      */
-    this.tileJSON_ = null;
+    constructor(options) {
+        super({
+            attributions: options.attributions,
+            cacheSize: options.cacheSize,
+            crossOrigin: options.crossOrigin,
+            imageSmoothing: options.imageSmoothing,
+            // projection: getProjection('EPSG:3857'),
+            //使TileJson支持其他空间参考 modified by lipeng 2020.9.21
+            projection: options.projection || getProjection('EPSG:3857'),
+            reprojectionErrorThreshold: options.reprojectionErrorThreshold,
+            state: SourceState.LOADING,
+            tileLoadFunction: options.tileLoadFunction,
+            wrapX: options.wrapX !== undefined ? options.wrapX : true,
+            transition: options.transition,
+        });
 
-    /**
-     * @type {number|import("../size.js").Size}
-     * @private
-     */
-    this.tileSize_ = options.tileSize;
+        /**
+         * @type {Config}
+         * @private
+         */
+        this.tileJSON_ = null;
 
-    if (options.url) {
-      if (options.jsonp) {
-        requestJSONP(
-          options.url,
-          this.handleTileJSONResponse.bind(this),
-          this.handleTileJSONError.bind(this)
-        );
-      } else {
-        const client = new XMLHttpRequest();
-        client.addEventListener('load', this.onXHRLoad_.bind(this));
-        client.addEventListener('error', this.onXHRError_.bind(this));
-        client.open('GET', options.url);
-        client.send();
-      }
-    } else if (options.tileJSON) {
-      this.handleTileJSONResponse(options.tileJSON);
-    } else {
-      assert(false, 51); // Either `url` or `tileJSON` options must be provided
-    }
-  }
+        /**
+         * @type {number|import("../size.js").Size}
+         * @private
+         */
+        this.tileSize_ = options.tileSize;
 
-  /**
-   * @private
-   * @param {Event} event The load event.
-   */
-  onXHRLoad_(event) {
-    const client = /** @type {XMLHttpRequest} */ (event.target);
-    // status will be 0 for file:// urls
-    if (!client.status || (client.status >= 200 && client.status < 300)) {
-      let response;
-      try {
-        response = /** @type {TileJSON} */ (JSON.parse(client.responseText));
-      } catch (err) {
-        this.handleTileJSONError();
-        return;
-      }
-      this.handleTileJSONResponse(response);
-    } else {
-      this.handleTileJSONError();
-    }
-  }
-
-  /**
-   * @private
-   * @param {Event} event The error event.
-   */
-  onXHRError_(event) {
-    this.handleTileJSONError();
-  }
-
-  /**
-   * @return {Config} The tilejson object.
-   * @api
-   */
-  getTileJSON() {
-    return this.tileJSON_;
-  }
-
-  /**
-   * @protected
-   * @param {Config} tileJSON Tile JSON.
-   */
-  handleTileJSONResponse(tileJSON) {
-    const epsg4326Projection = getProjection('EPSG:4326');
-
-    const sourceProjection = this.getProjection();
-    let extent;
-    if (tileJSON['bounds'] !== undefined) {
-      const transform = getTransformFromProjections(
-        epsg4326Projection,
-        sourceProjection
-      );
-      extent = applyTransform(tileJSON['bounds'], transform);
-    }
-
-    const minZoom = tileJSON['minzoom'] || 0;
-    const maxZoom = tileJSON['maxzoom'] || 22;
-    const tileGrid = createXYZ({
-      extent: extentFromProjection(sourceProjection),
-      maxZoom: maxZoom,
-      minZoom: minZoom,
-      tileSize: this.tileSize_,
-    });
-    this.tileGrid = tileGrid;
-
-    this.tileUrlFunction = createFromTemplates(tileJSON['tiles'], tileGrid);
-
-    if (tileJSON['attribution'] !== undefined && !this.getAttributions()) {
-      const attributionExtent =
-        extent !== undefined ? extent : epsg4326Projection.getExtent();
-
-      this.setAttributions(function (frameState) {
-        if (intersects(attributionExtent, frameState.extent)) {
-          return [tileJSON['attribution']];
+        if (options.url) {
+            if (options.jsonp) {
+                requestJSONP(
+                    options.url,
+                    this.handleTileJSONResponse.bind(this),
+                    this.handleTileJSONError.bind(this)
+                );
+            } else {
+                const client = new XMLHttpRequest();
+                client.addEventListener('load', this.onXHRLoad_.bind(this));
+                client.addEventListener('error', this.onXHRError_.bind(this));
+                client.open('GET', options.url);
+                client.send();
+            }
+        } else if (options.tileJSON) {
+            this.handleTileJSONResponse(options.tileJSON);
+        } else {
+            assert(false, 51); // Either `url` or `tileJSON` options must be provided
         }
-        return null;
-      });
     }
-    this.tileJSON_ = tileJSON;
-    this.setState(SourceState.READY);
-  }
 
-  /**
-   * @protected
-   */
-  handleTileJSONError() {
-    this.setState(SourceState.ERROR);
-  }
+    /**
+     * @private
+     * @param {Event} event The load event.
+     */
+    onXHRLoad_(event) {
+        const client = /** @type {XMLHttpRequest} */ (event.target);
+        // status will be 0 for file:// urls
+        if (!client.status || (client.status >= 200 && client.status < 300)) {
+            let response;
+            try {
+                response = /** @type {TileJSON} */ (JSON.parse(client.responseText));
+            } catch (err) {
+                this.handleTileJSONError();
+                return;
+            }
+            this.handleTileJSONResponse(response);
+        } else {
+            this.handleTileJSONError();
+        }
+    }
+
+    /**
+     * @private
+     * @param {Event} event The error event.
+     */
+    onXHRError_(event) {
+        this.handleTileJSONError();
+    }
+
+    /**
+     * @return {Config} The tilejson object.
+     * @api
+     */
+    getTileJSON() {
+        return this.tileJSON_;
+    }
+
+    /**
+     * @protected
+     * @param {Config} tileJSON Tile JSON.
+     */
+    handleTileJSONResponse(tileJSON) {
+        const epsg4326Projection = getProjection('EPSG:4326');
+
+        const sourceProjection = this.getProjection();
+        let extent;
+        if (tileJSON['bounds'] !== undefined) {
+            const transform = getTransformFromProjections(
+                epsg4326Projection,
+                sourceProjection
+            );
+            extent = applyTransform(tileJSON['bounds'], transform);
+        }
+
+        const minZoom = tileJSON['minzoom'] || 0;
+        const maxZoom = tileJSON['maxzoom'] || 22;
+        const tileGrid = createXYZ({
+            extent: extentFromProjection(sourceProjection),
+            maxZoom: maxZoom,
+            minZoom: minZoom,
+            tileSize: this.tileSize_,
+        });
+        this.tileGrid = tileGrid;
+
+        this.tileUrlFunction = createFromTemplates(tileJSON['tiles'], tileGrid);
+
+        if (tileJSON['attribution'] !== undefined && !this.getAttributions()) {
+            const attributionExtent =
+                extent !== undefined ? extent : epsg4326Projection.getExtent();
+
+            this.setAttributions(function (frameState) {
+                if (intersects(attributionExtent, frameState.extent)) {
+                    return [tileJSON['attribution']];
+                }
+                return null;
+            });
+        }
+        this.tileJSON_ = tileJSON;
+        this.setState(SourceState.READY);
+    }
+
+    /**
+     * @protected
+     */
+    handleTileJSONError() {
+        this.setState(SourceState.ERROR);
+    }
 }
 
 export default TileJSON;
