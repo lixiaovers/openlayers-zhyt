@@ -1,6 +1,6 @@
 {
     "name": "ol-zhyt",
-    "version": "6.4.4-dev-1",
+    "version": "6.4.4-dev-2",
     "description": "OpenLayers mapping library",
     "keywords": [
         "map",
@@ -43,7 +43,7 @@
         "url": "https://opencollective.com/openlayers"
     },
     "dependencies": {
-        "ol-mapbox-style-zhyt": "^6.1.5-dev1",
+        "ol-mapbox-style-zhyt": "^6.1.5-dev-2",
         "pbf": "3.2.1",
         "rbush": "^3.0.1"
     },
