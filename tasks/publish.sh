@@ -10,7 +10,7 @@ set -o errexit
 #
 # Destination directory for the package.
 #
-BUILT_PACKAGE=build/ol
+BUILT_PACKAGE=build/ol-zhyt
 
 #
 # URL for canonical repo.
