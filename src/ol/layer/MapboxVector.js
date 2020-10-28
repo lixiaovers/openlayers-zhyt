@@ -7,7 +7,7 @@ import MVT from '../format/MVT.js';
 import SourceState from '../source/State.js';
 import VectorTileLayer from '../layer/VectorTile.js';
 import VectorTileSource from '../source/VectorTile.js';
-import {applyStyle} from 'ol-mapbox-style';
+import { applyStyle } from 'ol-mapbox-style-zhyt';
 
 const mapboxBaseUrl = 'https://api.mapbox.com';
 
@@ -18,11 +18,11 @@ const mapboxBaseUrl = 'https://api.mapbox.com';
  * @private
  */
 export function getMapboxPath(url) {
-  const startsWith = 'mapbox://';
-  if (url.indexOf(startsWith) !== 0) {
-    return '';
-  }
-  return url.slice(startsWith.length);
+    const startsWith = 'mapbox://';
+    if (url.indexOf(startsWith) !== 0) {
+        return '';
+    }
+    return url.slice(startsWith.length);
 }
 
 /**
@@ -33,17 +33,17 @@ export function getMapboxPath(url) {
  * @private
  */
 export function normalizeSpriteUrl(url, token) {
-  const mapboxPath = getMapboxPath(url);
-  if (!mapboxPath) {
-    return url;
-  }
-  const startsWith = 'sprites/';
-  if (mapboxPath.indexOf(startsWith) !== 0) {
-    throw new Error(`unexpected sprites url: ${url}`);
-  }
-  const sprite = mapboxPath.slice(startsWith.length);
+    const mapboxPath = getMapboxPath(url);
+    if (!mapboxPath) {
+        return url;
+    }
+    const startsWith = 'sprites/';
+    if (mapboxPath.indexOf(startsWith) !== 0) {
+        throw new Error(`unexpected sprites url: ${url}`);
+    }
+    const sprite = mapboxPath.slice(startsWith.length);
 
-  return `${mapboxBaseUrl}/styles/v1/${sprite}/sprite?access_token=${token}`;
+    return `${mapboxBaseUrl}/styles/v1/${sprite}/sprite?access_token=${token}`;
 }
 
 /**
@@ -54,17 +54,17 @@ export function normalizeSpriteUrl(url, token) {
  * @private
  */
 export function normalizeGlyphsUrl(url, token) {
-  const mapboxPath = getMapboxPath(url);
-  if (!mapboxPath) {
-    return url;
-  }
-  const startsWith = 'fonts/';
-  if (mapboxPath.indexOf(startsWith) !== 0) {
-    throw new Error(`unexpected fonts url: ${url}`);
-  }
-  const font = mapboxPath.slice(startsWith.length);
+    const mapboxPath = getMapboxPath(url);
+    if (!mapboxPath) {
+        return url;
+    }
+    const startsWith = 'fonts/';
+    if (mapboxPath.indexOf(startsWith) !== 0) {
+        throw new Error(`unexpected fonts url: ${url}`);
+    }
+    const font = mapboxPath.slice(startsWith.length);
 
-  return `${mapboxBaseUrl}/fonts/v1/${font}/0-255.pbf?access_token=${token}`;
+    return `${mapboxBaseUrl}/fonts/v1/${font}/0-255.pbf?access_token=${token}`;
 }
 
 /**
@@ -75,17 +75,17 @@ export function normalizeGlyphsUrl(url, token) {
  * @private
  */
 export function normalizeStyleUrl(url, token) {
-  const mapboxPath = getMapboxPath(url);
-  if (!mapboxPath) {
-    return url;
-  }
-  const startsWith = 'styles/';
-  if (mapboxPath.indexOf(startsWith) !== 0) {
-    throw new Error(`unexpected style url: ${url}`);
-  }
-  const style = mapboxPath.slice(startsWith.length);
+    const mapboxPath = getMapboxPath(url);
+    if (!mapboxPath) {
+        return url;
+    }
+    const startsWith = 'styles/';
+    if (mapboxPath.indexOf(startsWith) !== 0) {
+        throw new Error(`unexpected style url: ${url}`);
+    }
+    const style = mapboxPath.slice(startsWith.length);
 
-  return `${mapboxBaseUrl}/styles/v1/${style}?&access_token=${token}`;
+    return `${mapboxBaseUrl}/styles/v1/${style}?&access_token=${token}`;
 }
 
 /**
@@ -96,11 +96,11 @@ export function normalizeStyleUrl(url, token) {
  * @private
  */
 export function normalizeSourceUrl(url, token) {
-  const mapboxPath = getMapboxPath(url);
-  if (!mapboxPath) {
-    return url;
-  }
-  return `https://{a-d}.tiles.mapbox.com/v4/${mapboxPath}/{z}/{x}/{y}.vector.pbf?access_token=${token}`;
+    const mapboxPath = getMapboxPath(url);
+    if (!mapboxPath) {
+        return url;
+    }
+    return `https://{a-d}.tiles.mapbox.com/v4/${mapboxPath}/{z}/{x}/{y}.vector.pbf?access_token=${token}`;
 }
 
 /**
@@ -108,17 +108,17 @@ export function normalizeSourceUrl(url, token) {
  * Event emitted on configuration or loading error.
  */
 class ErrorEvent extends BaseEvent {
-  /**
-   * @param {Error} error error object.
-   */
-  constructor(error) {
-    super(EventType.ERROR);
-
     /**
-     * @type {Error}
+     * @param {Error} error error object.
      */
-    this.error = error;
-  }
+    constructor(error) {
+        super(EventType.ERROR);
+
+        /**
+         * @type {Error}
+         */
+        this.error = error;
+    }
 }
 
 /**
@@ -140,7 +140,7 @@ class ErrorEvent extends BaseEvent {
  * @enum {string}
  */
 const SourceType = {
-  VECTOR: 'vector',
+    VECTOR: 'vector',
 };
 
 /**
@@ -250,156 +250,156 @@ const SourceType = {
  * @api
  */
 class MapboxVectorLayer extends VectorTileLayer {
-  /**
-   * @param {Options} options Layer options.  At a minimum, `styleUrl` and `accessToken`
-   * must be provided.
-   */
-  constructor(options) {
-    const declutter = 'declutter' in options ? options.declutter : true;
-    const source = new VectorTileSource({
-      state: SourceState.LOADING,
-      format: new MVT(),
-    });
+    /**
+     * @param {Options} options Layer options.  At a minimum, `styleUrl` and `accessToken`
+     * must be provided.
+     */
+    constructor(options) {
+        const declutter = 'declutter' in options ? options.declutter : true;
+        const source = new VectorTileSource({
+            state: SourceState.LOADING,
+            format: new MVT(),
+        });
 
-    super({
-      source: source,
-      declutter: declutter,
-      className: options.className,
-      opacity: options.opacity,
-      visible: options.visible,
-      zIndex: options.zIndex,
-      minResolution: options.minResolution,
-      maxResolution: options.maxResolution,
-      minZoom: options.minZoom,
-      maxZoom: options.maxZoom,
-      renderOrder: options.renderOrder,
-      renderBuffer: options.renderBuffer,
-      renderMode: options.renderMode,
-      map: options.map,
-      updateWhileAnimating: options.updateWhileAnimating,
-      updateWhileInteracting: options.updateWhileInteracting,
-      preload: options.preload,
-      useInterimTilesOnError: options.useInterimTilesOnError,
-    });
+        super({
+            source: source,
+            declutter: declutter,
+            className: options.className,
+            opacity: options.opacity,
+            visible: options.visible,
+            zIndex: options.zIndex,
+            minResolution: options.minResolution,
+            maxResolution: options.maxResolution,
+            minZoom: options.minZoom,
+            maxZoom: options.maxZoom,
+            renderOrder: options.renderOrder,
+            renderBuffer: options.renderBuffer,
+            renderMode: options.renderMode,
+            map: options.map,
+            updateWhileAnimating: options.updateWhileAnimating,
+            updateWhileInteracting: options.updateWhileInteracting,
+            preload: options.preload,
+            useInterimTilesOnError: options.useInterimTilesOnError,
+        });
 
-    this.sourceId = options.source;
-    this.layers = options.layers;
-    this.accessToken = options.accessToken;
-    this.fetchStyle(options.styleUrl);
-  }
+        this.sourceId = options.source;
+        this.layers = options.layers;
+        this.accessToken = options.accessToken;
+        this.fetchStyle(options.styleUrl);
+    }
 
-  /**
-   * Fetch the style object.
-   * @param {string} styleUrl The URL of the style to load.
-   * @protected
-   */
-  fetchStyle(styleUrl) {
-    const url = normalizeStyleUrl(styleUrl, this.accessToken);
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            `unexpected response when fetching style: ${response.status}`
-          );
+    /**
+     * Fetch the style object.
+     * @param {string} styleUrl The URL of the style to load.
+     * @protected
+     */
+    fetchStyle(styleUrl) {
+        const url = normalizeStyleUrl(styleUrl, this.accessToken);
+        fetch(url)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(
+                        `unexpected response when fetching style: ${response.status}`
+                    );
+                }
+                return response.json();
+            })
+            .then((style) => {
+                this.onStyleLoad(style);
+            })
+            .catch((error) => {
+                this.handleError(error);
+            });
+    }
+
+    /**
+     * Handle the loaded style object.
+     * @param {StyleObject} style The loaded style.
+     * @protected
+     */
+    onStyleLoad(style) {
+        let sourceId;
+        let sourceIdOrLayersList;
+        if (this.layers) {
+            // confirm all layers share the same source
+            const lookup = {};
+            for (let i = 0; i < style.layers.length; ++i) {
+                const layer = style.layers[i];
+                if (layer.source) {
+                    lookup[layer.id] = layer.source;
+                }
+            }
+            let firstSource;
+            for (let i = 0; i < this.layers.length; ++i) {
+                const candidate = lookup[this.layers[i]];
+                if (!candidate) {
+                    this.handleError(
+                        new Error(`could not find source for ${this.layers[i]}`)
+                    );
+                    return;
+                }
+                if (!firstSource) {
+                    firstSource = candidate;
+                } else if (firstSource !== candidate) {
+                    this.handleError(
+                        new Error(
+                            `layers can only use a single source, found ${firstSource} and ${candidate}`
+                        )
+                    );
+                    return;
+                }
+            }
+            sourceId = firstSource;
+            sourceIdOrLayersList = this.layers;
+        } else {
+            sourceId = this.sourceId;
+            sourceIdOrLayersList = sourceId;
         }
-        return response.json();
-      })
-      .then((style) => {
-        this.onStyleLoad(style);
-      })
-      .catch((error) => {
-        this.handleError(error);
-      });
-  }
 
-  /**
-   * Handle the loaded style object.
-   * @param {StyleObject} style The loaded style.
-   * @protected
-   */
-  onStyleLoad(style) {
-    let sourceId;
-    let sourceIdOrLayersList;
-    if (this.layers) {
-      // confirm all layers share the same source
-      const lookup = {};
-      for (let i = 0; i < style.layers.length; ++i) {
-        const layer = style.layers[i];
-        if (layer.source) {
-          lookup[layer.id] = layer.source;
+        if (!sourceIdOrLayersList) {
+            // default to the first source in the style
+            sourceId = Object.keys(style.sources)[0];
+            sourceIdOrLayersList = sourceId;
         }
-      }
-      let firstSource;
-      for (let i = 0; i < this.layers.length; ++i) {
-        const candidate = lookup[this.layers[i]];
-        if (!candidate) {
-          this.handleError(
-            new Error(`could not find source for ${this.layers[i]}`)
-          );
-          return;
+
+        if (style.sprite) {
+            style.sprite = normalizeSpriteUrl(style.sprite, this.accessToken);
         }
-        if (!firstSource) {
-          firstSource = candidate;
-        } else if (firstSource !== candidate) {
-          this.handleError(
-            new Error(
-              `layers can only use a single source, found ${firstSource} and ${candidate}`
-            )
-          );
-          return;
+
+        if (style.glyphs) {
+            style.glyphs = normalizeGlyphsUrl(style.glyphs, this.accessToken);
         }
-      }
-      sourceId = firstSource;
-      sourceIdOrLayersList = this.layers;
-    } else {
-      sourceId = this.sourceId;
-      sourceIdOrLayersList = sourceId;
+
+        const styleSource = style.sources[sourceId];
+        if (styleSource.type !== SourceType.VECTOR) {
+            this.handleError(
+                new Error(`only works for vector sources, found ${styleSource.type}`)
+            );
+            return;
+        }
+
+        const source = this.getSource();
+        source.setUrl(normalizeSourceUrl(styleSource.url, this.accessToken));
+
+        applyStyle(this, style, sourceIdOrLayersList)
+            .then(() => {
+                source.setState(SourceState.READY);
+            })
+            .catch((error) => {
+                this.handleError(error);
+            });
     }
 
-    if (!sourceIdOrLayersList) {
-      // default to the first source in the style
-      sourceId = Object.keys(style.sources)[0];
-      sourceIdOrLayersList = sourceId;
+    /**
+     * Handle configuration or loading error.
+     * @param {Error} error The error.
+     * @protected
+     */
+    handleError(error) {
+        this.dispatchEvent(new ErrorEvent(error));
+        const source = this.getSource();
+        source.setState(SourceState.ERROR);
     }
-
-    if (style.sprite) {
-      style.sprite = normalizeSpriteUrl(style.sprite, this.accessToken);
-    }
-
-    if (style.glyphs) {
-      style.glyphs = normalizeGlyphsUrl(style.glyphs, this.accessToken);
-    }
-
-    const styleSource = style.sources[sourceId];
-    if (styleSource.type !== SourceType.VECTOR) {
-      this.handleError(
-        new Error(`only works for vector sources, found ${styleSource.type}`)
-      );
-      return;
-    }
-
-    const source = this.getSource();
-    source.setUrl(normalizeSourceUrl(styleSource.url, this.accessToken));
-
-    applyStyle(this, style, sourceIdOrLayersList)
-      .then(() => {
-        source.setState(SourceState.READY);
-      })
-      .catch((error) => {
-        this.handleError(error);
-      });
-  }
-
-  /**
-   * Handle configuration or loading error.
-   * @param {Error} error The error.
-   * @protected
-   */
-  handleError(error) {
-    this.dispatchEvent(new ErrorEvent(error));
-    const source = this.getSource();
-    source.setState(SourceState.ERROR);
-  }
 }
 
 export default MapboxVectorLayer;
